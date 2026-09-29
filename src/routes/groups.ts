@@ -6,10 +6,11 @@ import { config } from "../config";
 import { Errors } from "../errors";
 import { requireUser } from "../plugins/auth";
 import { requireMembership, requireAdmin } from "../services/access";
-import { groupMembership, requireGroupRole } from "../plugins/group-access";
+import { groupMembership, requireGroupRole } from "../middleware";
 import { stellar } from "../services/stellar";
 import { inviteCode } from "../services/codes";
 import { auditGroupMemberActionTx, auditTx } from "../services/audit";
+import { rateLimited } from "../lib/rate-limit";
 import { AuditAction } from "../services/audit-actions";
 import {
   serializeGroup,
@@ -92,7 +93,7 @@ export default async function groupRoutes(app: FastifyInstance) {
   app.post(
     "/groups",
     {
-      config: { rateLimit: { max: config.RATE_LIMIT_GROUP, timeWindow: "1 minute" } },
+      ...rateLimited("groupCreate"),
       schema: {
         tags: ["Groups"],
         summary: "Create a group",
